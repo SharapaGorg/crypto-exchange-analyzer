@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "crypto-exchange-analyzer"
+version = "0.1.0"
+description = ""
+authors = ["SharapaGorg"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+ccxt = "^4.4.27"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
