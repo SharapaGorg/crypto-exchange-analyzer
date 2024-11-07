@@ -25,7 +25,7 @@ logo = """
  ⣾⣿⣿⡿⢟⣛⣻⣿⣿⣿⣦⣬⣙⣻⣿⣿⣷⣿⣿⢟⢝⢕⢕⢕⢕⢽⣿⣿⣷⣔
  ⣿⣿⠵⠚⠉⢀⣀⣀⣈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⢕⢕⢕⢕⢕⢕⣽⣿⣿⣿⣿
  ⢷⣂⣠⣴⣾⡿⡿⡻⡻⣿⣿⣴⣿⣿⣿⣿⣿⣿⣿⣿⣷⣷⣷⣷⣿⣿⣿⣿⣿⡿
- ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
+ ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
  ⠣⡁⠹⡪⡪⡪⡪⣮⣿⣿⣿⣿⣿⡿⠐⢉⢍⢋⢝⠻⣿⣿⣿⣿⣿⣿⣿⣿⠏⠈
  ⡣⡘⢄⠙⢾⣼⣾⣿⣿⣿⣿⣿⣿⡀⢐⢕⢕⢕⢕⢕⣘⣿⣿⣿⣿⣿⣿⡿⠚⠈
  ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
@@ -34,9 +34,11 @@ logo = """
  ⠄⠪⣂⠁⢕⠆⠄⠂⠄⠁⠂⢂⠉⠉⠍⢛⢛⢛⢛⢛⢕⢕⢕⢕⣽⣾⣿⠈
 """
 
+first_run = True
+
 def signal_handler(signum, frame):
-    console.print("\n[bold red]Script execution interrupted by user.[/]")
-    sys.exit(0)
+    console.print("\n[bold red]Process interrupted by user. Returning to main menu...[/]")
+    main()
 
 def wait_for_keypress():
     console.print("\n[bold bright_red]Press any key to continue...[/]")
@@ -80,17 +82,73 @@ def run_script(script_path):
         process = subprocess.Popen([sys.executable, script_path], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
         process.communicate()
     except KeyboardInterrupt:
-        console.print("\n[bold red]Script execution interrupted by user.[/]")
-        process.terminate()
-        process.wait()
+        console.print("\n[bold red]Script execution interrupted by user. Returning to main menu...[/]")
+        signal_handler(None, None)  # Возвращаемся к главному меню
 
     end_time = time()
     elapsed_time = end_time - start_time
     console.print(f"\n[bold green]Script execution completed in {elapsed_time:.2f} seconds.[/]")
     process_stats(process)
     wait_for_keypress()
+    main()
 
 def main():
+    global first_run
+    os.system("cls" if os.name == "nt" else "clear")
+
+    text_block = (
+        f"[#ff5555]{logo}\n\n[bold #ff5555]Created by an unknown digital unit Delagorg"
+    )
+
+    panel_content = Panel(
+        text_block,
+        border_style="#ff5555",
+        title="[bold #ff5555]Lol, Fuck you",
+        title_align="center",
+        padding=(1, 2),
+    )
+
+    console.print(panel_content, justify="center")
+    
+    if first_run:
+        display_progress(3)  # При первом запуске длительность прогресс бара больше
+        first_run = False
+    else:
+        display_progress(1)  # Для последующих запусков прогресс бар короче
+
+    # Повторный вывод логотипа убран
+
+    scripts_folder = "scripts"
+
+    scripts = [f for f in os.listdir(scripts_folder) if f.endswith(".py")]
+
+    if not scripts:
+        console.print("[bold red]No Python scripts found in 'scripts' folder.[/]")
+        return
+
+    choices = [{"name": script, "value": script} for script in scripts]
+    
+    questions = [
+        {
+            "type": "list",
+            "name": "script",
+            "message": "Select a script to run",
+            "choices": choices,
+        }
+    ]
+
+    answer = prompt(questions, style=custom_style)  # Применение пользовательского стиля
+    script_to_run = answer.get("script")
+
+    if script_to_run:
+        script_path = os.path.join(scripts_folder, script_to_run)
+
+        # Установка обработчика сигнала
+        signal.signal(signal.SIGINT, signal_handler)
+
+        run_script(script_path)
+
+if __name__ == "__main__":
     custom_style = {
         "questionmark": "#E91E63 bold",
         "answer": "#2196f3 bold",
@@ -110,63 +168,4 @@ def main():
         "fuzzy_selected": "",  # Выбранный элемент в нечетком поиске
         "fuzzy_marker": "",  # Маркер в нечетком поиске
     }
-    
-    first_run = True
-    while True:
-        os.system("cls" if os.name == "nt" else "clear")
-
-        text_block = (
-            f"[#ff5555]{logo}\n\n[bold #ff5555]Created by an unknown digital unit Delagorg"
-        )
-
-        panel_content = Panel(
-            text_block,
-            border_style="#ff5555",
-            title="[bold #ff5555]Lol, Fuck you",
-            title_align="center",
-            padding=(1, 2),
-        )
-
-        console.print(panel_content, justify="center")
-        
-        if first_run:
-            display_progress(3)  # При первом запуске длительность прогресс бара больше
-            first_run = False
-        else:
-            display_progress(1)  # Для последующих запусков прогресс бар короче
-
-        scripts_folder = "scripts"
-
-        scripts = [f for f in os.listdir(scripts_folder) if f.endswith(".py")]
-
-        if not scripts:
-            console.print("[bold red]No Python scripts found in 'scripts' folder.[/]")
-            return
-
-        choices = [{"name": script, "value": script} for script in scripts]
-
-        os.system("cls" if os.name == "nt" else "clear")
-        console.print(panel_content, justify="center")
-        
-        questions = [
-            {
-                "type": "list",
-                "name": "script",
-                "message": "Select a script to run",
-                "choices": choices,
-            }
-        ]
-
-        answer = prompt(questions, style=custom_style)  # Применение пользовательского стиля
-        script_to_run = answer.get("script")
-
-        if script_to_run:
-            script_path = os.path.join(scripts_folder, script_to_run)
-
-            # Установка обработчика сигнала
-            signal.signal(signal.SIGINT, signal_handler)
-
-            run_script(script_path)
-
-if __name__ == "__main__":
     main()
