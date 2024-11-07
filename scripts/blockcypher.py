@@ -57,7 +57,7 @@ def get_block_data():
                 console.print(f"Failed to retrieve data: {response.status_code}")
                 exit(1)
         except KeyboardInterrupt:
-            console.print("\\n[bold green]Program terminated. All processes have been interrupted.[/bold green]")
+            console.print("[bold green]Program terminated. All processes have been interrupted.[/bold green]")
             exit(0)
 
 data = get_block_data()
@@ -90,7 +90,6 @@ def get_block_response():
                 console.print(f"Failed to retrieve block data: {block_response.status_code}")
                 exit(1)
         except KeyboardInterrupt:
-            console.print("\\n[bold green]Program terminated. All processes have been interrupted.[/bold green]")
             exit(0)
 
 block_data = get_block_response()

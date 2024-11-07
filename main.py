@@ -25,12 +25,12 @@ logo = """
  ⣾⣿⣿⡿⢟⣛⣻⣿⣿⣿⣦⣬⣙⣻⣿⣿⣷⣿⣿⢟⢝⢕⢕⢕⢕⢽⣿⣿⣷⣔
  ⣿⣿⠵⠚⠉⢀⣀⣀⣈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⢕⢕⢕⢕⢕⢕⣽⣿⣿⣿⣿
  ⢷⣂⣠⣴⣾⡿⡿⡻⡻⣿⣿⣴⣿⣿⣿⣿⣿⣿⣿⣿⣷⣷⣷⣷⣿⣿⣿⣿⣿⡿
- ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
+ ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
  ⠣⡁⠹⡪⡪⡪⡪⣮⣿⣿⣿⣿⣿⡿⠐⢉⢍⢋⢝⠻⣿⣿⣿⣿⣿⣿⣿⣿⠏⠈
  ⡣⡘⢄⠙⢾⣼⣾⣿⣿⣿⣿⣿⣿⡀⢐⢕⢕⢕⢕⢕⣘⣿⣿⣿⣿⣿⣿⡿⠚⠈
- ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
+ ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
  ⠄⠁⠕⠝⡢⠈⠻⣿⣿⣿⣿⣿⣿⣿⣇⢐⢕⢕⢕⢕⢕⢕⢕⣕⣿⣿⣿⡿⠚⠙
- ⠨⡂⢀⢑⢕⡅⠂⠄⠉⠛⠻⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠂⠄⠉⠉⢕⢂⢕⠈
+ ⠨⡂⢀⢑⢕⡅⠂⠄⠉⠛⠛⠻⠿⢿⣿⣿⣿⣿⣿⣿⣿⡿⠂⠄⠉⠉⢕⢂⢕⠈
  ⠄⠪⣂⠁⢕⠆⠄⠂⠄⠁⠂⢂⠉⠉⠍⢛⢛⢛⢛⢛⢕⢕⢕⢕⣽⣾⣿⠈
 """
 
@@ -91,6 +91,26 @@ def run_script(script_path):
     wait_for_keypress()
 
 def main():
+    custom_style = {
+        "questionmark": "#E91E63 bold",
+        "answer": "#2196f3 bold",
+        "input": "#673AB7 bold",
+        "question": "",
+        "pointer": "#ff5555 bold",  # Цвет стрелок
+        "highlighted": "#ff5555 bold",  # Цвет подсвеченных элементов
+        "selected": "#ff5555 bold",
+        "separator": "#cc5454",
+        "instruction": "",  # Инструкции сверху
+        "validator": "",  # Инструкции по валидации
+        "marker": "",  # Галочка выбора
+        "fuzzy_prompt": "",  # Промпт для нечеткого поиска
+        "fuzzy_info": "",  # Информация в нечетком поиске
+        "fuzzy_border": "",  # Граница в нечетком поиске
+        "fuzzy_match": "",  # Подсветка в нечетком поиске
+        "fuzzy_selected": "",  # Выбранный элемент в нечетком поиске
+        "fuzzy_marker": "",  # Маркер в нечетком поиске
+    }
+    
     first_run = True
     while True:
         os.system("cls" if os.name == "nt" else "clear")
@@ -110,12 +130,10 @@ def main():
         console.print(panel_content, justify="center")
         
         if first_run:
-            display_progress(3)  # First run, longer duration
+            display_progress(3)  # При первом запуске длительность прогресс бара больше
             first_run = False
         else:
-            display_progress(1)  # Subsequent runs, shorter duration
-
-        os.system("cls" if os.name == "nt" else "clear")
+            display_progress(1)  # Для последующих запусков прогресс бар короче
 
         scripts_folder = "scripts"
 
@@ -126,6 +144,10 @@ def main():
             return
 
         choices = [{"name": script, "value": script} for script in scripts]
+
+        os.system("cls" if os.name == "nt" else "clear")
+        console.print(panel_content, justify="center")
+        
         questions = [
             {
                 "type": "list",
@@ -135,13 +157,13 @@ def main():
             }
         ]
 
-        answer = prompt(questions)
+        answer = prompt(questions, style=custom_style)  # Применение пользовательского стиля
         script_to_run = answer.get("script")
 
         if script_to_run:
             script_path = os.path.join(scripts_folder, script_to_run)
 
-            # Setting up signal handler
+            # Установка обработчика сигнала
             signal.signal(signal.SIGINT, signal_handler)
 
             run_script(script_path)
