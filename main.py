@@ -5,7 +5,7 @@ from rich import print
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
-from time import sleep
+from time import sleep, time
 import sys
 from InquirerPy import prompt
 
@@ -19,7 +19,7 @@ logo = """
  ⣾⣿⣿⡿⢟⣛⣻⣿⣿⣿⣦⣬⣙⣻⣿⣿⣷⣿⣿⢟⢝⢕⢕⢕⢕⢽⣿⣿⣷⣔
  ⣿⣿⠵⠚⠉⢀⣀⣀⣈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⢕⢕⢕⢕⢕⢕⣽⣿⣿⣿⣿
  ⢷⣂⣠⣴⣾⡿⡿⡻⡻⣿⣿⣴⣿⣿⣿⣿⣿⣿⣿⣿⣷⣷⣷⣷⣿⣿⣿⣿⣿⡿
- ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
+ ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
  ⠣⡁⠹⡪⡪⡪⡪⣮⣿⣿⣿⣿⣿⡿⠐⢉⢍⢋⢝⠻⣿⣿⣿⣿⣿⣿⣿⣿⠏⠈
  ⡣⡘⢄⠙⢾⣼⣾⣿⣿⣿⣿⣿⣿⡀⢐⢕⢕⢕⢕⢕⣘⣿⣿⣿⣿⣿⣿⡿⠚⠈
  ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
@@ -33,6 +33,7 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 def run_script(script_path):
+    start_time = time()
     try:
         process = subprocess.Popen([sys.executable, script_path], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
         process.communicate()
@@ -40,6 +41,21 @@ def run_script(script_path):
         console.print("\n[bold red]Script execution interrupted by user.[/]")
         process.terminate()
         process.wait()
+
+    end_time = time()
+    elapsed_time = end_time - start_time
+    console.print(f"\n[bold green]Script execution completed in {elapsed_time:.2f} seconds.[/]")
+    process_stats(process)
+
+def process_stats(process):
+    # Здесь можно добавить больше логики для сбора и отображения статистики процесса.
+    console.print(f"\n[bold blue]Process ID:[/] {process.pid}")
+    console.print(f"[bold blue]Return Code:[/] {process.returncode}")
+    if os.name != 'nt':
+        import resource
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        console.print(f"[bold blue]User CPU time:[/] {usage.ru_utime:.2f} seconds")
+        console.print(f"[bold blue]System CPU time:[/] {usage.ru_stime:.2f} seconds")
 
 def main():
     os.system("cls" if os.name == "nt" else "clear")
