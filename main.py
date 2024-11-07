@@ -1,11 +1,13 @@
 import os
+import signal
+import subprocess
 from rich import print
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
 from time import sleep
+import sys
 from InquirerPy import prompt
-from InquirerPy.validator import PathValidator
 
 console = Console()
 
@@ -25,6 +27,19 @@ logo = """
  ⠨⡂⢀⢑⢕⡅⠂⠄⠉⠛⠻⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠂⠄⠉⠉⢕⢂⢕⠈
  ⠄⠪⣂⠁⢕⠆⠄⠂⠄⠁⠂⢂⠉⠉⠍⢛⢛⢛⢛⢛⢕⢕⢕⢕⣽⣾⣿⠈
 """
+
+def signal_handler(signum, frame):
+    console.print("\n[bold red]Script execution interrupted by user.[/]")
+    sys.exit(0)
+
+def run_script(script_path):
+    try:
+        process = subprocess.Popen([sys.executable, script_path], stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)
+        process.communicate()
+    except KeyboardInterrupt:
+        console.print("\n[bold red]Script execution interrupted by user.[/]")
+        process.terminate()
+        process.wait()
 
 def main():
     os.system("cls" if os.name == "nt" else "clear")
@@ -81,7 +96,11 @@ def main():
 
         if script_to_run:
             script_path = os.path.join(scripts_folder, script_to_run)
-            os.system(f'python "{script_path}"')
+
+            # Setting up signal handler
+            signal.signal(signal.SIGINT, signal_handler)
+
+            run_script(script_path)
     except KeyboardInterrupt:
         console.print("\n[bold red]Process interrupted by user.[/]")
 
