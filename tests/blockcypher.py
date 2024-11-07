@@ -1,21 +1,45 @@
 import requests
+from rich.table import Table
+from rich.console import Console
 
-# API URL для получения информации о последних транзакциях
+# API URL to get information about the latest transactions
 API_URL = "https://api.blockcypher.com/v1/btc/main/txs"
 
-# Запрос для получения последних транзакций
+# Request to get the latest transactions
 response = requests.get(API_URL)
 transactions = response.json()
 
-# Парсинг и вывод адресов кошельков участников транзакций
+# Create a console object for rich output
+console = Console()
+
+# Create a table object
+table = Table(title="Bitcoin Transactions", show_lines=True)
+
+# Add columns to the table
+table.add_column("Transaction Hash", style="cyan", no_wrap=True)
+table.add_column("Input Addresses", style="magenta")
+table.add_column("Input Count", style="magenta")
+table.add_column("Output Addresses", style="green")
+table.add_column("Output Count", style="green")
+
+# Parse and output wallet addresses of transaction participants
 for tx in transactions:
     inputs = tx.get('inputs', [])
     outputs = tx.get('outputs', [])
 
-    input_addresses = [inp.get('addresses', []) for inp in inputs]
-    output_addresses = [out.get('addresses', []) for out in outputs]
+    input_addresses = [", ".join(inp.get('addresses', [])) for inp in inputs] if inputs else ["N/A"]
+    output_addresses = [", ".join(out.get('addresses', [])) for out in outputs] if outputs else ["N/A"]
 
-    print(f"Transaction Hash: {tx['hash']}")
-    print("Input Addresses:", input_addresses)
-    print("Output Addresses:", output_addresses)
-    print("\n")
+    input_count = sum(len(inp.get('addresses', [])) for inp in inputs)
+    output_count = sum(len(out.get('addresses', [])) for out in outputs)
+
+    table.add_row(
+        tx['hash'], 
+        "\n".join(input_addresses),
+        str(input_count),
+        "\n".join(output_addresses), 
+        str(output_count)
+    )
+
+# Display the table
+console.print(table)
