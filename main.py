@@ -28,9 +28,9 @@ logo = """
  ⢌⠻⣿⡿⡫⡪⡪⡪⡪⡪⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠋
  ⠣⡁⠹⡪⡪⡪⡪⣮⣿⣿⣿⣿⣿⡿⠐⢉⢍⢋⢝⠻⣿⣿⣿⣿⣿⣿⣿⣿⠏⠈
  ⡣⡘⢄⠙⢾⣼⣾⣿⣿⣿⣿⣿⣿⡀⢐⢕⢕⢕⢕⢕⣘⣿⣿⣿⣿⣿⣿⡿⠚⠈
- ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
+ ⠌⢊⢂⢣⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⢐⢕⢕⢕⢕⢕⢅⢁⢉⢍⢋⠁⢐⢕⢂⠈
  ⠄⠁⠕⠝⡢⠈⠻⣿⣿⣿⣿⣿⣿⣿⣇⢐⢕⢕⢕⢕⢕⢕⢕⣕⣿⣿⣿⡿⠚⠙
- ⠨⡂⢀⢑⢕⡅⠂⠄⠉⠛⠛⠻⠿⢿⣿⣿⣿⣿⣿⣿⣿⡿⠂⠄⠉⠉⢕⢂⢕⠈
+ ⠨⡂⢀⢑⢕⡅⠂⠄⠉⠛⠻⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠂⠄⠉⠉⢕⢂⢕⠈
  ⠄⠪⣂⠁⢕⠆⠄⠂⠄⠁⠂⢂⠉⠉⠍⢛⢛⢛⢛⢛⢕⢕⢕⢕⣽⣾⣿⠈
 """
 
@@ -61,6 +61,19 @@ def process_stats(process):
         console.print(f"[bold blue]User CPU time:[/] {usage.ru_utime:.2f} seconds")
         console.print(f"[bold blue]System CPU time:[/] {usage.ru_stime:.2f} seconds")
 
+def display_progress(duration):
+    with Progress(
+        TextColumn("[bold #ff5555]{task.description}"),
+        BarColumn(bar_width=console.size.width - 40),
+        TimeRemainingColumn(),
+        console=console,
+        expand=True,
+    ) as progress:
+        task = progress.add_task("[bold #ff5555]Loading environment...", total=100)
+        for _ in range(100):
+            progress.update(task, advance=1)
+            sleep(duration / 100)
+
 def run_script(script_path):
     start_time = time()
     try:
@@ -78,6 +91,7 @@ def run_script(script_path):
     wait_for_keypress()
 
 def main():
+    first_run = True
     while True:
         os.system("cls" if os.name == "nt" else "clear")
 
@@ -94,52 +108,43 @@ def main():
         )
 
         console.print(panel_content, justify="center")
+        
+        if first_run:
+            display_progress(3)  # First run, longer duration
+            first_run = False
+        else:
+            display_progress(1)  # Subsequent runs, shorter duration
 
-        try:
-            with Progress(
-                TextColumn("[bold #ff5555]{task.description}"),
-                BarColumn(bar_width=console.size.width - 40),
-                TimeRemainingColumn(),
-                console=console,
-                expand=True,
-            ) as progress:
-                task = progress.add_task("[bold #ff5555]Loading environment...", total=100)
-                while not progress.finished:
-                    progress.update(task, advance=1)
-                    sleep(0.03)
+        os.system("cls" if os.name == "nt" else "clear")
 
-            os.system("cls" if os.name == "nt" else "clear")
+        scripts_folder = "scripts"
 
-            scripts_folder = "scripts"
+        scripts = [f for f in os.listdir(scripts_folder) if f.endswith(".py")]
 
-            scripts = [f for f in os.listdir(scripts_folder) if f.endswith(".py")]
+        if not scripts:
+            console.print("[bold red]No Python scripts found in 'scripts' folder.[/]")
+            return
 
-            if not scripts:
-                console.print("[bold red]No Python scripts found in 'scripts' folder.[/]")
-                return
+        choices = [{"name": script, "value": script} for script in scripts]
+        questions = [
+            {
+                "type": "list",
+                "name": "script",
+                "message": "Select a script to run",
+                "choices": choices,
+            }
+        ]
 
-            choices = [{"name": script, "value": script} for script in scripts]
-            questions = [
-                {
-                    "type": "list",
-                    "name": "script",
-                    "message": "Select a script to run",
-                    "choices": choices,
-                }
-            ]
+        answer = prompt(questions)
+        script_to_run = answer.get("script")
 
-            answer = prompt(questions)
-            script_to_run = answer.get("script")
+        if script_to_run:
+            script_path = os.path.join(scripts_folder, script_to_run)
 
-            if script_to_run:
-                script_path = os.path.join(scripts_folder, script_to_run)
+            # Setting up signal handler
+            signal.signal(signal.SIGINT, signal_handler)
 
-                # Setting up signal handler
-                signal.signal(signal.SIGINT, signal_handler)
-
-                run_script(script_path)
-        except KeyboardInterrupt:
-                console.print("\n[bold red]Process interrupted by user.[/]")
+            run_script(script_path)
 
 if __name__ == "__main__":
     main()
