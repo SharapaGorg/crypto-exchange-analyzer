@@ -54,7 +54,6 @@ def wait_for_keypress():
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 def process_stats(process):
-    # Basic process statistics
     console.print(f"\n[bold blue]Process ID:[/] {process.pid}")
     console.print(f"[bold blue]Return Code:[/] {process.returncode}")
     if os.name != 'nt':
@@ -66,7 +65,7 @@ def process_stats(process):
 def display_progress(duration):
     with Progress(
         TextColumn("[bold #ff5555]{task.description}"),
-        BarColumn(bar_width=console.size.width - 40),
+        BarColumn(bar_width=console.size.width - 40, style="bright_red"),
         TimeRemainingColumn(),
         console=console,
         expand=True,
@@ -83,7 +82,7 @@ def run_script(script_path):
         process.communicate()
     except KeyboardInterrupt:
         console.print("\n[bold red]Script execution interrupted by user. Returning to main menu...[/]")
-        signal_handler(None, None)  # Возвращаемся к главному меню
+        signal_handler(None, None)
 
     end_time = time()
     elapsed_time = end_time - start_time
@@ -111,12 +110,10 @@ def main():
     console.print(panel_content, justify="center")
     
     if first_run:
-        display_progress(3)  # При первом запуске длительность прогресс бара больше
+        display_progress(3)  # Initial duration
         first_run = False
     else:
-        display_progress(1)  # Для последующих запусков прогресс бар короче
-
-    # Повторный вывод логотипа убран
+        display_progress(1)  # Subsequent duration
 
     scripts_folder = "scripts"
 
@@ -137,13 +134,12 @@ def main():
         }
     ]
 
-    answer = prompt(questions, style=custom_style)  # Применение пользовательского стиля
+    answer = prompt(questions, style=custom_style)  # Apply custom style
     script_to_run = answer.get("script")
 
     if script_to_run:
         script_path = os.path.join(scripts_folder, script_to_run)
 
-        # Установка обработчика сигнала
         signal.signal(signal.SIGINT, signal_handler)
 
         run_script(script_path)
@@ -154,18 +150,18 @@ if __name__ == "__main__":
         "answer": "#2196f3 bold",
         "input": "#673AB7 bold",
         "question": "",
-        "pointer": "#ff5555 bold",  # Цвет стрелок
-        "highlighted": "#ff5555 bold",  # Цвет подсвеченных элементов
+        "pointer": "#ff5555 bold",  # Pointer color
+        "highlighted": "#ff5555 bold",  # Highlight color
         "selected": "#ff5555 bold",
         "separator": "#cc5454",
-        "instruction": "",  # Инструкции сверху
-        "validator": "",  # Инструкции по валидации
-        "marker": "",  # Галочка выбора
-        "fuzzy_prompt": "",  # Промпт для нечеткого поиска
-        "fuzzy_info": "",  # Информация в нечетком поиске
-        "fuzzy_border": "",  # Граница в нечетком поиске
-        "fuzzy_match": "",  # Подсветка в нечетком поиске
-        "fuzzy_selected": "",  # Выбранный элемент в нечетком поиске
-        "fuzzy_marker": "",  # Маркер в нечетком поиске
+        "instruction": "",  # Top instructions
+        "validator": "",  # Validation instructions
+        "marker": "",  # Checkmark
+        "fuzzy_prompt": "",  # Fuzzy search prompt
+        "fuzzy_info": "",  # Info in fuzzy search
+        "fuzzy_border": "",  # Border in fuzzy search
+        "fuzzy_match": "",  # Highlight in fuzzy search
+        "fuzzy_selected": "",  # Selected item in fuzzy search
+        "fuzzy_marker": "",  # Marker in fuzzy search
     }
     main()
